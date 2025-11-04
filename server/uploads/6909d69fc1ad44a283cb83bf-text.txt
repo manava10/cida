@@ -1,0 +1,67 @@
+
+
+Manav Mehta
+mmanavp10@gmail.com  —  +91 82713 17697  —  linkedin.com/in/manavaa  —  github.com/manava10
+Professional Summary
+An ambitious computer science undergraduate with hands-on experience building scalable web applications,
+real-time systems, and deep learning models.  Proficient in full-stack JavaScript (MERN), cloud deployments
+on AWS and DigitalOcean, and machine learning frameworks.  Strong problem-solving skills are demonstrated
+through competitive programming and real-world projects.
+Education
+VIT-AP University, AmaravatiSept 2022 – Aug 2026
+B.Tech in Computer Science CGPA: 8.77/10
+Sri Viswasanthi Educational Institutions
+Class XII (CBSE)Percentage: 95.2%
+Sri Viswasanthi Educational Institutions
+Class X (CBSE)Percentage: 96.2%
+Technical Skills
+Programming Languages:Python, Java, JavaScript, SQL, HTML, CSS
+Web  Development:Frontend  Development  (React,  HTML,  CSS,  JavaScript),  Backend  Development  (Node.js,
+Express), REST APIs, Socket.io
+Databases:MongoDB, MySQL
+Cloud & Deployment:AWS (EC2, SES), DigitalOcean, Netlify, Render, CI/CD
+Machine Learning & AI:CNN , Generative AI
+Tools:Git, GitHub, VS Code, IntelliJ, PyCharm, Linux
+Experience
+FoodFreakyJuly 2025 – Oct 2025
+Full Stack Developer (Remote)
+•Developed and maintained the FoodFreaky food delivery platform using the MERN stack, implementing both frontend
+and backend modules.
+•Integrated secure payment gateway, optimized REST APIs, and improved load performance by 35% through caching
+and DB indexing.
+•Collaborated remotely with the design and QA teams to deploy production-ready builds on DigitalOcean.
+•Contributed to end-to-end product lifecycle from feature planning to cloud deployment and debugging in production.
+Chegg Inc.Mar 2023 – May 2024
+Subject Matter Expert — Advanced Mathematics (Remote)
+•Delivered 300+ advanced math solutions (Calculus, Linear Algebra) with an average student rating of 4.9/5.
+•Collaborated in an agile environment to ensure accuracy, clarity, and timely delivery of solutions.
+•Mentored new contributors on best practices for problem-solving and solution formatting.
+Projects
+FoodFreaky - Full-Stack Food Delivery Web AppSept 2025
+React, Node.js, Express, MongoDB, AWS, DigitalOcean — Live Demo
+•Engineered a MERN-stack platform with role-based JWT authentication (User, Admin).
+•Deployed frontend on Netlify and backend on DigitalOcean; configured CI/CD pipelines, CORS, and secure environ-
+ment variables.
+•Implemented a dynamic shopping cart using React Context API and a robust REST API for full CRUD operations.
+•Automated PDF invoice generation and email delivery using AWS SES and server-side PDF tooling.
+Real-Time Anonymous Chat PlatformJune 2025
+Node.js, Express, Socket.io, AWS EC2 — Live Demo
+•Designed and scaled a real-time chat system supporting 50,000+ concurrent users with load-tested WebSockets.
+•Implemented encrypted messaging over Socket.io and deployed resilient backend services on AWS EC2 with autoscaling
+considerations.
+
+Emotion Detection using CNN and VGG16Mar 2025
+Python, TensorFlow, Keras — GitHub
+•Engineered a facial emotion detection pipeline using CNN and VGG16 transfer learning for feature extraction.
+•Executed data preprocessing, augmentation, and model evaluation; achieved 90%+ accuracy on benchmark datasets
+and optimized inference latency.
+Achievements
+•Solved 450+ DSA problems on LeetCode; Contest Rating 1700 (Top∼20%).
+•Scored 99+ percentile in Mathematics in JEE Mains, demonstrating strong analytical and problem-solving skills.
+Certifications
+•MERN Full-Stack Developer, Blackbucks (2025) – Certificate
+•MongoDB Certified Developer, MongoDB University (2025)
+Relevant Coursework
+•Data Structures and Algorithms, Operating Systems, Computer Networks, Machine Learning, Deep Learning
+Languages
+•English (Fluent), Hindi (Native), Telugu (Intermediate)
