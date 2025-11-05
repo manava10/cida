@@ -24,30 +24,40 @@ router.post('/summary', requireAuth, async (req, res) => {
     const doc = await loadDocIfAllowed(req.auth, documentId);
     if (!doc) return res.status(404).json({ error: 'not found' });
     const chunks = await Chunk.find({ documentId: doc._id }).sort({ page: 1 }).lean();
+    if (!chunks || chunks.length === 0) {
+      return res.status(400).json({ error: 'document not processed yet or has no chunks' });
+    }
     const text = chunks.map((c) => c.text).join('\n');
+    // eslint-disable-next-line no-console
+    console.log(`[ai] summary: ${chunks.length} chunks, ${text.length} chars total`);
     let llm = null;
     try {
       llm = await geminiSummarize(text, sentences);
-    } catch {}
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[ai] gemini summary error:', e.message);
+    }
     if (llm && llm.text && llm.text.length > 0) {
       // eslint-disable-next-line no-console
-      console.log('[ai] summary using gemini');
+      console.log(`[ai] summary using gemini (${chunks.length} chunks processed)`);
       if (format === 'markdown') {
-        const md = `### Summary (model: ${llm.model})\n\n${llm.text}`;
-        return res.json({ documentId, summaryMarkdown: md, model: llm.model });
+        const md = `### Summary (model: ${llm.model}, from ${chunks.length} chunks)\n\n${llm.text}`;
+        return res.json({ documentId, summaryMarkdown: md, model: llm.model, chunksUsed: chunks.length });
       }
-      return res.json({ documentId, summary: llm.text, model: llm.model });
+      return res.json({ documentId, summary: llm.text, model: llm.model, chunksUsed: chunks.length });
     }
     const sents = text.replace(/\n+/g, ' ').split(/(?<=[\.!?])\s+/).filter(Boolean).slice(0, Math.max(1, Math.min(10, Number(sentences) || 3)));
     const summary = sents.join(' ');
     // eslint-disable-next-line no-console
-    console.log('[ai] summary using fallback');
+    console.log(`[ai] summary using fallback (${chunks.length} chunks)`);
     if (format === 'markdown') {
-      const md = `### Summary (model: fallback)\n\n${summary}`;
-      return res.json({ documentId, summaryMarkdown: md, model: 'fallback' });
+      const md = `### Summary (model: fallback, from ${chunks.length} chunks)\n\n${summary}`;
+      return res.json({ documentId, summaryMarkdown: md, model: 'fallback', chunksUsed: chunks.length });
     }
-    res.json({ documentId, summary, model: 'fallback' });
+    res.json({ documentId, summary, model: 'fallback', chunksUsed: chunks.length });
   } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[ai] summary error:', e);
     res.status(500).json({ error: 'summary failed' });
   }
 });

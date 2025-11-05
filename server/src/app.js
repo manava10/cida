@@ -10,7 +10,18 @@ const env = loadEnv();
 const app = express();
 
 app.set('trust proxy', 1);
-app.use(helmet());
+app.use(
+  helmet({
+    frameguard: false,
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        "frame-ancestors": ["'self'", env.CLIENT_ORIGIN]
+      }
+    },
+    crossOriginEmbedderPolicy: false
+  })
+);
 app.use(cors({ origin: env.CLIENT_ORIGIN, credentials: true }));
 app.use(cookieParser());
 app.use(express.json({ limit: '2mb' }));

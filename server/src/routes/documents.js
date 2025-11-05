@@ -8,9 +8,11 @@ import { loadEnv } from '../config/env.js';
 import { ensureDir } from '../utils/fs.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { Document } from '../models/Document.js';
+import { Chunk } from '../models/Chunk.js';
 import { AuditEvent } from '../models/AuditEvent.js';
 import { processDocument } from '../services/processor.js';
 import mongoose from 'mongoose';
+import { createReadStream, statSync, unlinkSync } from 'fs';
 
 const env = loadEnv();
 ensureDir(env.UPLOAD_DIR);
@@ -115,6 +117,62 @@ router.get('/:id', requireAuth, async (req, res) => {
     res.json({ document: doc });
   } catch (e) {
     res.status(500).json({ error: 'failed to fetch document' });
+  }
+});
+
+// Stream original file contents if authorized
+router.get('/:id/file', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'invalid document id' });
+    }
+    const doc = await Document.findById(id).lean();
+    if (!doc) return res.status(404).json({ error: 'not found' });
+    if (req.auth.role !== 'admin' && doc.ownerId.toString() !== req.auth.userId) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+    const stats = statSync(doc.originalPath);
+    res.setHeader('Content-Type', doc.mimeType || 'application/octet-stream');
+    res.setHeader('Content-Length', stats.size);
+    res.setHeader('Content-Disposition', 'inline');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    createReadStream(doc.originalPath).pipe(res);
+  } catch (e) {
+    res.status(500).json({ error: 'failed to stream file' });
+  }
+});
+
+router.delete('/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'invalid document id' });
+    }
+    const doc = await Document.findById(id);
+    if (!doc) return res.status(404).json({ error: 'not found' });
+    if (req.auth.role !== 'admin' && doc.ownerId.toString() !== req.auth.userId) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+    // delete files
+    try {
+      if (doc.originalPath && fs.existsSync(doc.originalPath)) unlinkSync(doc.originalPath);
+      if (doc.textPath && fs.existsSync(doc.textPath)) unlinkSync(doc.textPath);
+    } catch {}
+    // delete chunks
+    await Chunk.deleteMany({ documentId: doc._id });
+    await Document.deleteOne({ _id: doc._id });
+    await AuditEvent.create({
+      actorId: req.auth.userId,
+      action: 'document.delete',
+      resourceType: 'document',
+      resourceId: id,
+      ip: req.ip,
+      userAgent: req.get('user-agent')
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: 'delete failed' });
   }
 });
 
