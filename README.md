@@ -13,7 +13,7 @@ Quickstart
 2) Copy env templates:
    - server: cp server/.env.example server/.env
    - client: cp client/.env.example client/.env
-3) Fill in values (Mongo URI, JWT secret, OpenAI key optional).
+3) Fill in values (Mongo URI, JWT secret, Gemini API key).
 4) Install deps in both apps and run dev:
    - server: npm install && npm run dev
    - client: npm install && npm run dev
