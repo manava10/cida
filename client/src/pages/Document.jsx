@@ -14,7 +14,9 @@ export default function Document() {
   const [question, setQuestion] = useState('')
   const [answerMd, setAnswerMd] = useState('')
   const [chatHistory, setChatHistory] = useState([])
+  const [isTyping, setIsTyping] = useState(false)
   const chatMessagesEndRef = useRef(null)
+  const typingIntervalRef = useRef(null)
 
   useEffect(() => {
     loadDocument()
@@ -26,6 +28,15 @@ export default function Document() {
       chatMessagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }, [chatHistory])
+
+  // Cleanup typing interval on unmount
+  useEffect(() => {
+    return () => {
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current)
+      }
+    }
+  }, [])
 
   async function loadDocument() {
     setError('')
@@ -61,14 +72,68 @@ export default function Document() {
     // Add user question to chat
     setChatHistory(prev => [...prev, { role: 'user', content: userQuestion }])
     
+    // Add placeholder for assistant response with typing indicator
+    setChatHistory(prev => [...prev, { role: 'assistant', content: '', isTyping: true }])
+    setIsTyping(true)
+    
     try {
       const res = await apiPost(`/api/ai/qa?format=markdown`, { documentId: id, question: userQuestion, topK: 3 })
       const answer = res.answerMarkdown || res.answer || ''
-      setChatHistory(prev => [...prev, { role: 'assistant', content: answer }])
-      setAnswerMd('')
+      
+      // Remove typing indicator and start typing effect
+      setChatHistory(prev => {
+        const updated = prev.map((msg, idx) => {
+          // Find the last assistant message (the one we just added)
+          if (idx === prev.length - 1 && msg.role === 'assistant' && msg.isTyping) {
+            return { ...msg, isTyping: false }
+          }
+          return msg
+        })
+        return updated
+      })
+      
+      // Type the answer word by word
+      const words = answer.split(' ')
+      let currentIndex = 0
+      
+      // Clear any existing interval
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current)
+      }
+      
+      typingIntervalRef.current = setInterval(() => {
+        if (currentIndex < words.length) {
+          const currentText = words.slice(0, currentIndex + 1).join(' ')
+          setChatHistory(prev => {
+            const updated = [...prev]
+            // Update the last assistant message
+            const lastIndex = updated.length - 1
+            if (lastIndex >= 0 && updated[lastIndex].role === 'assistant') {
+              updated[lastIndex] = { 
+                role: 'assistant', 
+                content: currentText 
+              }
+            }
+            return updated
+          })
+          currentIndex++
+        } else {
+          if (typingIntervalRef.current) {
+            clearInterval(typingIntervalRef.current)
+            typingIntervalRef.current = null
+          }
+          setIsTyping(false)
+        }
+      }, 30) // 30ms per word (adjust for speed)
+      
     } catch (e) {
       setError('Ask failed: ' + (e.message || 'unknown error'))
-      setChatHistory(prev => prev.slice(0, -1)) // Remove user question on error
+      setChatHistory(prev => prev.slice(0, -1)) // Remove user question and placeholder on error
+      setIsTyping(false)
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current)
+        typingIntervalRef.current = null
+      }
     }
   }
 
@@ -151,7 +216,20 @@ export default function Document() {
                   )}
                   {chatHistory.map((msg, idx) => (
                     <div key={idx} className={`chat-message ${msg.role}`}>
-                      <div className="chat-bubble" dangerouslySetInnerHTML={{__html: msg.content.replace(/\n/g, '<br/>').replace(/### /g, '<h3>').replace(/#### /g, '<h4>')}} />
+                      <div className="chat-bubble">
+                        {msg.isTyping && !msg.content ? (
+                          <span className="typing-indicator">
+                            <span></span><span></span><span></span>
+                          </span>
+                        ) : msg.content ? (
+                          <>
+                            <div dangerouslySetInnerHTML={{__html: msg.content.replace(/\n/g, '<br/>').replace(/### /g, '<h3>').replace(/#### /g, '<h4>')}} />
+                            {isTyping && idx === chatHistory.length - 1 && (
+                              <span className="typing-cursor">▊</span>
+                            )}
+                          </>
+                        ) : null}
+                      </div>
                     </div>
                   ))}
                   <div ref={chatMessagesEndRef} />
