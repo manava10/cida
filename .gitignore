@@ -1,8 +1,18 @@
 # Ignore environment files
+.env
+.env.*
+*.env
+!.env.example
 client/.env
+client/.env.*
 server/.env
+server/.env.*
 
 # (Optional but recommended)
 node_modules/
 dist/
 .DS_Store
+
+# Uploads directory (contains user-uploaded files)
+server/uploads/
+server/server/uploads/
