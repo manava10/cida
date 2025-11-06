@@ -1,9 +1,26 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5001'
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000'
+
+async function handleResponse(res, path) {
+  if (!res.ok) {
+    let errorMessage = `Request failed: ${res.status}`;
+    try {
+      const errorData = await res.json();
+      errorMessage = errorData.error || errorMessage;
+    } catch {
+      // If response is not JSON, use status text
+      errorMessage = res.statusText || errorMessage;
+    }
+    const error = new Error(errorMessage);
+    error.status = res.status;
+    error.statusText = res.statusText;
+    throw error;
+  }
+  return res.json();
+}
 
 export async function apiGet(path) {
   const res = await fetch(`${API_BASE}${path}`, { credentials: 'include' })
-  if (!res.ok) throw new Error(`GET ${path} ${res.status}`)
-  return res.json()
+  return handleResponse(res, path);
 }
 
 export async function apiPost(path, body) {
@@ -13,8 +30,7 @@ export async function apiPost(path, body) {
     credentials: 'include',
     body: JSON.stringify(body || {})
   })
-  if (!res.ok) throw new Error(`POST ${path} ${res.status}`)
-  return res.json()
+  return handleResponse(res, path);
 }
 
 export async function apiPostForm(path, formData) {
@@ -23,8 +39,7 @@ export async function apiPostForm(path, formData) {
     credentials: 'include',
     body: formData
   })
-  if (!res.ok) throw new Error(`POST ${path} ${res.status}`)
-  return res.json()
+  return handleResponse(res, path);
 }
 
 export async function apiDelete(path) {
@@ -32,8 +47,7 @@ export async function apiDelete(path) {
     method: 'DELETE',
     credentials: 'include'
   })
-  if (!res.ok) throw new Error(`DELETE ${path} ${res.status}`)
-  return res.json()
+  return handleResponse(res, path);
 }
 
 

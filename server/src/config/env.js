@@ -1,15 +1,21 @@
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 let cached;
 export function loadEnv() {
   if (cached) return cached;
   dotenv.config();
+  // Resolve default upload directory to server/uploads regardless of process cwd
+  const thisFilePath = fileURLToPath(import.meta.url);
+  const thisDir = path.dirname(thisFilePath);
+  const defaultUploadDir = path.resolve(thisDir, '..', '..', 'uploads');
   const env = {
     PORT: process.env.PORT || 4000,
     MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/cida',
     JWT_SECRET: process.env.JWT_SECRET || 'dev-secret',
     CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
-    UPLOAD_DIR: process.env.UPLOAD_DIR || './uploads',
+    UPLOAD_DIR: process.env.UPLOAD_DIR || defaultUploadDir,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
     GOOGLE_API_KEY: process.env.GOOGLE_API_KEY || '',
     GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-2.0-flash'
@@ -22,5 +28,5 @@ export function loadEnv() {
   cached = env;
   return env;
 }
-
+ 
 

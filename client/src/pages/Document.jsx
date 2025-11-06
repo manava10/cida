@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { apiGet, apiPost } from '../lib/api.js'
 import Header from '../components/Header.jsx'
@@ -14,10 +14,18 @@ export default function Document() {
   const [question, setQuestion] = useState('')
   const [answerMd, setAnswerMd] = useState('')
   const [chatHistory, setChatHistory] = useState([])
+  const chatMessagesEndRef = useRef(null)
 
   useEffect(() => {
     loadDocument()
   }, [id])
+
+  // Auto-scroll chat to bottom when new messages arrive
+  useEffect(() => {
+    if (chatMessagesEndRef.current) {
+      chatMessagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [chatHistory])
 
   async function loadDocument() {
     setError('')
@@ -106,7 +114,7 @@ export default function Document() {
             <iframe
               className="pdfframe-full"
               title="preview"
-              src={`${import.meta.env.VITE_API_BASE || 'http://localhost:5001'}/api/documents/${id}/file`}
+              src={`${import.meta.env.VITE_API_BASE || 'http://localhost:4000'}/api/documents/${id}/file`}
               onError={(e) => { console.error('iframe error', e); setError('Preview failed') }}
             />
           </section>
@@ -146,6 +154,7 @@ export default function Document() {
                       <div className="chat-bubble" dangerouslySetInnerHTML={{__html: msg.content.replace(/\n/g, '<br/>').replace(/### /g, '<h3>').replace(/#### /g, '<h4>')}} />
                     </div>
                   ))}
+                  <div ref={chatMessagesEndRef} />
                 </div>
                 <div className="chat-input-container">
                   <input 

@@ -96,11 +96,11 @@ button.link { background:transparent; border:0; padding:0; margin:0; font:inheri
 .doc-sidebar { display:flex; flex-direction:column; gap:18px; overflow-y:auto; }
 .doc-panel { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:12px; backdrop-filter: blur(4px); display:flex; flex-direction:column; min-height:0; }
 .doc-summary { min-height:200px; max-height:350px; }
-.doc-chat { flex:1; min-height:300px; max-height:600px; }
+.doc-chat { flex:1; min-height:300px; max-height:600px; display:flex; flex-direction:column; }
 .pdfframe-full { flex:1; width:100%; border:0; border-radius:8px; background:rgba(0,0,0,.2); min-height:0; }
 
 /* chat interface */
-.chat-container { display:flex; flex-direction:column; flex:1; min-height:0; }
+.chat-container { display:flex; flex-direction:column; flex:1; min-height:0; height:100%; position:relative; }
 .chat-messages { flex:1; overflow-y:auto; overflow-x:hidden; padding:12px; background:rgba(0,0,0,.15); border-radius:8px; margin-bottom:12px; display:flex; flex-direction:column; gap:12px; min-height:0; }
 .chat-empty { text-align:center; padding:24px; color:var(--muted); }
 .chat-message { display:flex; flex-direction:column; }
@@ -109,7 +109,7 @@ button.link { background:transparent; border:0; padding:0; margin:0; font:inheri
 .chat-bubble { max-width:85%; padding:10px 14px; border-radius:12px; font-size:14px; line-height:1.6; word-wrap:break-word; }
 .chat-message.user .chat-bubble { background:rgba(61,220,132,.2); border:1px solid rgba(61,220,132,.3); }
 .chat-message.assistant .chat-bubble { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); }
-.chat-input-container { display:flex; gap:8px; flex-shrink:0; }
+.chat-input-container { display:flex; gap:8px; flex-shrink:0; width:100%; }
 .chat-messages::-webkit-scrollbar { width:6px; }
 .chat-messages::-webkit-scrollbar-track { background:rgba(255,255,255,.03); border-radius:3px; }
 .chat-messages::-webkit-scrollbar-thumb { background:rgba(255,255,255,.15); border-radius:3px; }
