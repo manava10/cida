@@ -13,7 +13,7 @@ router.post('/signup', async (req, res) => {
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await User.create({ email, passwordHash, name, role: 'viewer' });
   const token = issueJwt({ userId: user._id.toString(), email: user.email, role: user.role });
-  setAuthCookie(res, token);
+  setAuthCookie(res, token, req);
   res.status(201).json({ user: { id: user._id, email: user.email, name: user.name, role: user.role } });
 });
 
@@ -25,12 +25,12 @@ router.post('/login', async (req, res) => {
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(401).json({ error: 'invalid credentials' });
   const token = issueJwt({ userId: user._id.toString(), email: user.email, role: user.role });
-  setAuthCookie(res, token);
+  setAuthCookie(res, token, req);
   res.json({ user: { id: user._id, email: user.email, name: user.name, role: user.role } });
 });
 
-router.post('/logout', (_req, res) => {
-  clearAuthCookie(res);
+router.post('/logout', (req, res) => {
+  clearAuthCookie(res, req);
   res.json({ ok: true });
 });
 

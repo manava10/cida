@@ -7,19 +7,35 @@ export function issueJwt(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 }
 
-export function setAuthCookie(res, token) {
-  const isProd = process.env.NODE_ENV === 'production';
+export function setAuthCookie(res, token, req) {
+  // Detect production: Render always uses HTTPS, so if request is secure or NODE_ENV is production
+  // For cross-origin (frontend on Vercel, backend on Render):
+  // - sameSite: 'none' allows cross-origin cookies (requires secure: true)
+  // - secure: true is required for sameSite: 'none' and for HTTPS
+  // - Don't set domain - let browser handle it for cross-origin
+  const isProd = process.env.NODE_ENV === 'production' || 
+                 (req && (req.secure || req.get('x-forwarded-proto') === 'https'));
+  const isLocalhost = req && (req.hostname === 'localhost' || req.hostname === '127.0.0.1');
+  
   res.cookie('cida_token', token, {
     httpOnly: true,
-    secure: isProd,
-    sameSite: 'strict',
+    secure: isProd && !isLocalhost, // true in production (HTTPS required)
+    sameSite: (isProd && !isLocalhost) ? 'none' : 'lax', // 'none' for cross-origin in prod, 'lax' for same-origin
     path: '/',
-    maxAge: 7 * 24 * 60 * 60 * 1000
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
 }
 
-export function clearAuthCookie(res) {
-  res.clearCookie('cida_token', { path: '/' });
+export function clearAuthCookie(res, req) {
+  const isProd = process.env.NODE_ENV === 'production' || 
+                 (req && (req.secure || req.get('x-forwarded-proto') === 'https'));
+  const isLocalhost = req && (req.hostname === 'localhost' || req.hostname === '127.0.0.1');
+  
+  res.clearCookie('cida_token', { 
+    path: '/',
+    secure: isProd && !isLocalhost,
+    sameSite: (isProd && !isLocalhost) ? 'none' : 'lax'
+  });
 }
 
 export function requireAuth(req, res, next) {
