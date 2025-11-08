@@ -16,18 +16,28 @@ export default function Document() {
   const [chatHistory, setChatHistory] = useState([])
   const [isTyping, setIsTyping] = useState(false)
   const chatMessagesEndRef = useRef(null)
+  const chatMessagesContainerRef = useRef(null)
   const typingIntervalRef = useRef(null)
 
   useEffect(() => {
     loadDocument()
   }, [id])
 
-  // Auto-scroll chat to bottom when new messages arrive
-  useEffect(() => {
-    if (chatMessagesEndRef.current) {
-      chatMessagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+  // Auto-scroll chat messages container (not the whole page)
+  const scrollToBottom = () => {
+    if (chatMessagesContainerRef.current) {
+      // Directly scroll the container - this won't affect the whole page
+      chatMessagesContainerRef.current.scrollTop = chatMessagesContainerRef.current.scrollHeight
     }
-  }, [chatHistory])
+  }
+
+  // Auto-scroll when typing completes
+  useEffect(() => {
+    if (!isTyping && chatHistory.length > 0) {
+      // Small delay to ensure DOM is updated
+      setTimeout(scrollToBottom, 50)
+    }
+  }, [isTyping, chatHistory.length])
 
   // Cleanup typing interval on unmount
   useEffect(() => {
@@ -116,6 +126,27 @@ export default function Document() {
             }
             return updated
           })
+          
+          // Smooth scroll chat container only (not the whole page)
+          // Scroll less frequently to avoid janky scrolling and page jumps
+          if (chatMessagesContainerRef.current && currentIndex % 8 === 0) {
+            const container = chatMessagesContainerRef.current
+            const scrollHeight = container.scrollHeight
+            const scrollTop = container.scrollTop
+            const clientHeight = container.clientHeight
+            const isNearBottom = scrollHeight - scrollTop - clientHeight < 250
+            
+            if (isNearBottom) {
+              // Direct scroll assignment - prevents page jumps
+              // Using requestAnimationFrame for smoother updates
+              requestAnimationFrame(() => {
+                if (chatMessagesContainerRef.current) {
+                  chatMessagesContainerRef.current.scrollTop = chatMessagesContainerRef.current.scrollHeight
+                }
+              })
+            }
+          }
+          
           currentIndex++
         } else {
           if (typingIntervalRef.current) {
@@ -123,6 +154,8 @@ export default function Document() {
             typingIntervalRef.current = null
           }
           setIsTyping(false)
+          // Final scroll to bottom when typing completes
+          setTimeout(scrollToBottom, 100)
         }
       }, 30) // 30ms per word (adjust for speed)
       
@@ -165,7 +198,7 @@ export default function Document() {
       <Header />
       <div className="doc-page">
         <div className="doc-header">
-          <button className="cta" onClick={() => navigate('/app')} style={{padding: '8px 14px', fontSize: '14px'}}>← Back</button>
+          <button className="cta" onClick={() => navigate('/app')} style={{padding: '8px 14px', fontSize: '14px'}}>← Back to Dashboard</button>
           <h1 className="doc-title">{doc.title}</h1>
           <div className="doc-meta">
             <span className="badge">{doc.status}</span>
@@ -175,7 +208,7 @@ export default function Document() {
 
         <div className="doc-content">
           <section className="doc-panel doc-preview">
-            <h3 className="panel-title">Preview</h3>
+            <h3 className="panel-title">👁️ Preview</h3>
             <iframe
               className="pdfframe-full"
               title="preview"
@@ -186,7 +219,7 @@ export default function Document() {
 
           <div className="doc-sidebar">
             <section className="doc-panel doc-summary">
-              <h3 className="panel-title">Summary</h3>
+              <h3 className="panel-title">📝 Summary</h3>
               <div style={{display:'flex', gap:'8px', alignItems:'center', marginBottom:'8px', flexShrink:0}}>
                 <input 
                   type="number" 
@@ -198,7 +231,7 @@ export default function Document() {
                   style={{width:'60px'}} 
                 />
                 <span className="muted" style={{fontSize:'12px'}}>sentences</span>
-                <button className="cta" onClick={summarize}>Summarize</button>
+                <button className="cta" onClick={summarize}>✨ Summarize</button>
               </div>
               {summaryMd && (
                 <div className="markdown-scroll" dangerouslySetInnerHTML={{__html: summaryMd.replace(/\n/g, '<br/>').replace(/### /g, '<h3>').replace(/#### /g, '<h4>')}} />
@@ -206,9 +239,9 @@ export default function Document() {
             </section>
 
             <section className="doc-panel doc-chat">
-              <h3 className="panel-title">Chat with Gemini</h3>
-              <div className="chat-container">
-                <div className="chat-messages">
+              <h3 className="panel-title" style={{flexShrink:0}}>💬 Chat with Gemini</h3>
+              <div className="chat-container" style={{flex:1, minHeight:0, display:'flex', flexDirection:'column'}}>
+                <div className="chat-messages" ref={chatMessagesContainerRef} style={{flex:'1 1 0', minHeight:0, overflowY:'auto'}}>
                   {chatHistory.length === 0 && (
                     <div className="chat-empty">
                       <p className="muted">Ask questions about this document...</p>
@@ -244,7 +277,9 @@ export default function Document() {
                     onKeyDown={(e)=>e.key==='Enter' && !e.shiftKey && ask()} 
                     style={{flex:1}} 
                   />
-                  <button className="cta" onClick={ask} disabled={!question.trim()}>Send</button>
+                  <button className="cta" onClick={ask} disabled={!question.trim()}>
+                    {isTyping ? '⏳' : '📤'} Send
+                  </button>
                 </div>
               </div>
             </section>

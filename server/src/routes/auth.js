@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 import { issueJwt, setAuthCookie, clearAuthCookie, requireAuth } from '../middleware/auth.js';
 

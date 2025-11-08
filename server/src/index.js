@@ -7,9 +7,9 @@ async function start() {
   const env = loadEnv();
   await connectMongo(env.MONGODB_URI);
   const server = createServer(app);
-  server.listen(env.PORT, () => {
-    // eslint-disable-next-line no-console
-    console.log(`API listening on http://localhost:${env.PORT}`);
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
   });
 }
 

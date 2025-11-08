@@ -9,5 +9,3 @@ export function generateEmbedding(text, dims = 64) {
   const norm = Math.sqrt(vec.reduce((s, x) => s + x * x, 0)) || 1;
   return vec.map((x) => x / norm);
 }
-
-
