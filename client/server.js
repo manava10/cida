@@ -13,38 +13,49 @@ const PORT = process.env.PORT || 5173;
 const distPath = join(__dirname, 'dist');
 const indexPath = join(distPath, 'index.html');
 
-// Serve static files from the dist directory (assets, images, etc.)
-app.use(express.static(distPath, {
-  // Don't redirect, just serve files
-  index: false
-}));
+// Verify dist directory exists
+if (!existsSync(distPath)) {
+  console.error(`ERROR: dist directory not found at ${distPath}`);
+  console.error('Make sure you run "npm run build" before starting the server');
+  process.exit(1);
+}
 
-// Handle client-side routing - serve index.html for all non-file routes
-// This ensures React Router handles all routes like /signin, /signup, etc.
-app.get('*', (req, res, next) => {
-  // Check if the request is for a file (has extension)
-  const hasExtension = /\.[^/]+$/.test(req.path);
-  
-  // If it's a file request and file doesn't exist, continue to 404
-  if (hasExtension) {
-    const filePath = join(distPath, req.path);
-    if (!existsSync(filePath)) {
-      return res.status(404).send('File not found');
-    }
-  }
-  
-  // For all other routes (like /signin, /signup, /app, etc.), serve index.html
-  // This allows React Router to handle the routing client-side
+if (!existsSync(indexPath)) {
+  console.error(`ERROR: index.html not found at ${indexPath}`);
+  console.error('Make sure you run "npm run build" before starting the server');
+  process.exit(1);
+}
+
+console.log(`✓ Dist directory found: ${distPath}`);
+console.log(`✓ Index file found: ${indexPath}`);
+
+// Serve static files from the dist directory (assets, images, etc.)
+// This must come before the catch-all route
+app.use(express.static(distPath));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', distPath, indexPath });
+});
+
+// Handle client-side routing - serve index.html for all routes
+// This ensures React Router handles all routes like /signin, /signup, /app, etc.
+app.get('*', (req, res) => {
+  // Always serve index.html for any route that doesn't match a static file
+  // Express static middleware will have already handled file requests
   res.sendFile(indexPath, (err) => {
     if (err) {
       console.error('Error serving index.html:', err);
-      res.status(500).send('Internal server error');
+      if (!res.headersSent) {
+        res.status(500).send('Internal server error');
+      }
     }
   });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Serving files from: ${distPath}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📁 Serving files from: ${distPath}`);
+  console.log(`🌐 Open http://localhost:${PORT} in your browser`);
 });
 
