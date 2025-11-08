@@ -10,19 +10,49 @@ const env = loadEnv();
 const app = express();
 
 app.set('trust proxy', 1);
+
+// CORS configuration - support multiple origins (production + Vercel preview deployments)
+const allowedOrigins = env.CLIENT_ORIGIN 
+  ? env.CLIENT_ORIGIN.split(',').map(origin => origin.trim().replace(/\/$/, ''))
+  : ['http://localhost:5173'];
+
 app.use(
   helmet({
     frameguard: false,
     contentSecurityPolicy: {
       useDefaults: true,
       directives: {
-        "frame-ancestors": ["'self'", env.CLIENT_ORIGIN]
+        "frame-ancestors": ["'self'", ...allowedOrigins, "*.vercel.app"]
       }
     },
     crossOriginEmbedderPolicy: false
   })
 );
-app.use(cors({ origin: env.CLIENT_ORIGIN, credentials: true }));
+
+app.use(cors({ 
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.some(allowed => origin === allowed || origin.startsWith(allowed))) {
+      return callback(null, true);
+    }
+    
+    // Allow Vercel preview deployments (pattern: *.vercel.app)
+    if (origin.includes('.vercel.app')) {
+      return callback(null, true);
+    }
+    
+    // Allow localhost for development
+    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true 
+}));
 app.use(cookieParser());
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
