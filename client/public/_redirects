@@ -1,0 +1,4 @@
+# Redirect all routes to index.html for React Router client-side routing
+# This file is needed for Static Site deployment on Render
+/*    /index.html   200
+

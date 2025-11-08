@@ -27,27 +27,11 @@ The frontend is now configured to work in both environments:
 
 ## Deployment Steps on Render
 
-### Option 1: Static Site (Recommended - Free Tier)
+### ⚠️ Important: Use Web Service (Not Static Site)
 
-1. **Create New Static Site on Render**
-   - Go to Render Dashboard → New → Static Site
-   - Connect your GitHub repository
+**Why Web Service?** Static Site deployment doesn't properly handle React Router client-side routing, causing 404 errors on routes like `/signin`, `/signup`, etc. The Web Service with `server.js` properly handles all routes.
 
-2. **Configure Build Settings**:
-   - **Name**: `cida-client` (or your preferred name)
-   - **Branch**: `main` (or your deployment branch)
-   - **Root Directory**: `client` (important!)
-   - **Build Command**: `npm install && npm run build`
-   - **Publish Directory**: `dist`
-
-3. **Environment Variables** (if needed):
-   - `VITE_API_BASE`: Your backend API URL
-     - Example: `https://cida-server.onrender.com`
-     - Or: `https://your-backend-url.onrender.com`
-
-4. **Deploy**: Click "Create Static Site"
-
-### Option 2: Web Service (More Control)
+### Option 1: Web Service (Recommended - Fixes 404 Issues)
 
 1. **Create New Web Service on Render**
    - Go to Render Dashboard → New → Web Service
@@ -56,18 +40,47 @@ The frontend is now configured to work in both environments:
 2. **Configure Build Settings**:
    - **Name**: `cida-client`
    - **Region**: Choose closest to your users
-   - **Branch**: `main`
-   - **Root Directory**: `client`
+   - **Branch**: `main` (or your deployment branch)
+   - **Root Directory**: `client` ⚠️ **IMPORTANT: Set this to `client`**
    - **Runtime**: `Node`
    - **Build Command**: `npm install && npm run build`
    - **Start Command**: `npm start`
+   - **Auto-Deploy**: `Yes` (recommended)
 
 3. **Environment Variables**:
    - `VITE_API_BASE`: Your backend API URL
      - Example: `https://cida-server.onrender.com`
+     - **Important**: No trailing slash
    - `PORT`: Automatically set by Render (don't set manually)
+   - `NODE_ENV`: `production` (optional, but recommended)
 
 4. **Deploy**: Click "Create Web Service"
+
+### Option 2: Using render.yaml (Advanced)
+
+If you prefer Infrastructure as Code, you can use the provided `render.yaml` file:
+
+1. **Create a Blueprint**:
+   - Go to Render Dashboard → New → Blueprint
+   - Connect your GitHub repository
+   - Render will automatically detect `render.yaml`
+   - Review and deploy both services
+
+2. **Set Environment Variables**:
+   - Still need to set secrets in Render dashboard:
+     - `MONGODB_URI`
+     - `JWT_SECRET`
+     - `GOOGLE_API_KEY`
+   - Other variables are automatically configured
+
+### Option 3: Static Site (Not Recommended - Causes 404 Issues)
+
+⚠️ **Static Site deployment will cause 404 errors on routes like `/signin`** because Render's static site hosting doesn't support client-side routing properly.
+
+If you must use Static Site:
+1. Use the `_redirects` file in `public/` folder (may not work on Render)
+2. Consider using a different hosting service (Netlify, Vercel) that better supports SPAs
+3. Or switch to Web Service (recommended)
 
 ## Environment Variables
 
@@ -144,27 +157,36 @@ npm run dev
 - Check Node.js version compatibility
 - Verify all dependencies are in `package.json`
 
-### Issue: 404 on page refresh (client-side routing)
+### Issue: 404 on page refresh or direct URL access (e.g., `/signin`)
 **Solution**: 
-- Make sure you're using Web Service option (not Static Site)
-- The `server.js` handles client-side routing correctly
-- For Static Site, you may need to configure redirects in Render
+- **This is the most common issue!**
+- Make sure you're using **Web Service** (not Static Site)
+- Verify `Root Directory` is set to `client` in Render
+- Verify `Start Command` is `npm start` (uses server.js)
+- The `server.js` file handles client-side routing correctly
+- Check Render logs to ensure server.js is running
+- If using Static Site, switch to Web Service - Static Site doesn't properly support React Router
 
 ## Render Configuration Summary
 
-### Static Site Configuration:
+### ✅ Web Service Configuration (Recommended):
 ```
+Type: Web Service
+Build Command: npm install && npm run build
+Start Command: npm start
+Root Directory: client
+Runtime: Node
+```
+
+### ⚠️ Static Site Configuration (Not Recommended - Causes 404):
+```
+Type: Static Site
 Build Command: npm install && npm run build
 Publish Directory: dist
 Root Directory: client
 ```
 
-### Web Service Configuration:
-```
-Build Command: npm install && npm run build
-Start Command: npm start
-Root Directory: client
-```
+**Why Web Service?** The `server.js` file ensures all routes (like `/signin`, `/signup`) are properly handled by serving `index.html`, allowing React Router to handle client-side routing. Static Site deployment doesn't have this capability.
 
 ## Notes
 

@@ -1,0 +1,42 @@
+# Render configuration file for CIDA project
+# This file configures both backend and frontend services
+
+services:
+  # Backend Service
+  - type: web
+    name: cida-server
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false  # Set this in Render dashboard
+      - key: JWT_SECRET
+        sync: false  # Set this in Render dashboard
+      - key: GOOGLE_API_KEY
+        sync: false  # Set this in Render dashboard
+      - key: CLIENT_ORIGIN
+        fromService:
+          type: web
+          name: cida-client
+          property: url
+
+  # Frontend Service (Web Service)
+  - type: web
+    name: cida-client
+    env: node
+    plan: free
+    buildCommand: cd client && npm install && npm run build
+    startCommand: cd client && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_BASE
+        fromService:
+          type: web
+          name: cida-server
+          property: url
+
