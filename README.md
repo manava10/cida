@@ -55,6 +55,8 @@ Upload your documents once, and ask questions forever. Get instant answers with 
 ## 🚀 Quickstart
 
 1. **Create a MongoDB database** (local or MongoDB Atlas). Copy the connection URI.
+   - For local MongoDB: `mongodb://localhost:27017/cida`
+   - For MongoDB Atlas: Create a cluster and get your connection string (requires network access configuration)
 
 2. **Copy environment templates:**
    ```bash
@@ -120,7 +122,8 @@ cida/
 
 ## 🔒 Security Features
 
-- **JWT Authentication**: Tokens stored in httpOnly cookies (development uses non-secure cookies)
+- **JWT Authentication**: Tokens stored in httpOnly cookies
+  - ⚠️ **Note**: Development mode uses non-secure cookies for localhost. **Always enable secure cookies in production.**
 - **Password Hashing**: bcrypt with salt rounds for secure password storage
 - **Role-Based Access Control (RBAC)**: Admin, contributor, and viewer roles
 - **Audit Logging**: Track all user actions for compliance
